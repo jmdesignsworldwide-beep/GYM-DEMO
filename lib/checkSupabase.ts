@@ -5,7 +5,7 @@
 export type SupabaseStatus =
   | { state: "ok" }
   | { state: "missing-env" }
-  | { state: "error"; detail: string };
+  | { state: "error"; status?: number; detail: string };
 
 export async function checkSupabase(): Promise<SupabaseStatus> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,7 +16,7 @@ export async function checkSupabase(): Promise<SupabaseStatus> {
   }
 
   try {
-    const res = await fetch(`${url}/rest/v1/`, {
+    const res = await fetch(`${url.replace(/\/$/, "")}/rest/v1/`, {
       headers: {
         apikey: anonKey,
         Authorization: `Bearer ${anonKey}`,
@@ -25,7 +25,15 @@ export async function checkSupabase(): Promise<SupabaseStatus> {
     });
 
     if (!res.ok) {
-      return { state: "error", detail: `HTTP ${res.status}` };
+      // El cuerpo de error de Supabase NO es secreto: suele traer un
+      // mensaje/hint que explica exactamente qué falla con la llave.
+      let body = "";
+      try {
+        body = (await res.text()).slice(0, 300);
+      } catch {
+        /* ignore */
+      }
+      return { state: "error", status: res.status, detail: body || `HTTP ${res.status}` };
     }
 
     return { state: "ok" };
