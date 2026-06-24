@@ -28,8 +28,8 @@ export default function LoginPage() {
     const result = await signIn(username, password);
 
     if (result.ok) {
-      // Sesión iniciada — al sistema. El layout real llega en la Pieza 3.
-      router.push("/");
+      // Sesión iniciada — al dashboard del sistema.
+      router.push("/dashboard");
       router.refresh();
     } else {
       setError(result.message);
