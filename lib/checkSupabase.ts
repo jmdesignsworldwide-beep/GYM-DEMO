@@ -16,7 +16,11 @@ export async function checkSupabase(): Promise<SupabaseStatus> {
   }
 
   try {
-    const res = await fetch(`${url.replace(/\/$/, "")}/rest/v1/`, {
+    // Usamos el endpoint de salud de Auth (GoTrue): el gateway exige un
+    // apikey válido para enrutar, así que un 200 confirma que la URL y la
+    // anon key son correctas. El endpoint raíz /rest/v1/ no sirve porque
+    // solo lo acepta la service_role.
+    const res = await fetch(`${url.replace(/\/$/, "")}/auth/v1/health`, {
       headers: {
         apikey: anonKey,
         Authorization: `Bearer ${anonKey}`,
