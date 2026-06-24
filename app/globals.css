@@ -1,3 +1,156 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ───────────────────────────────────────────────────────────
+   JM FIT — Tokens de diseño
+   Dos temas: oscuro (principal) y claro (cálido, pensado).
+   Todo referencia variables, nada hardcodeado en componentes.
+   ─────────────────────────────────────────────────────────── */
+
+:root {
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Tema oscuro (principal) — near-black en capas ── */
+[data-theme="dark"] {
+  --bg-0: #07090c;
+  --bg-1: #0a0e12;
+  --bg-2: #11161c;
+  --bg-3: #1a2129;
+
+  --text-1: #f5f7fa;
+  --text-2: #a8b2bd;
+  --text-3: #6b7682;
+
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+
+  --accent: #ff6b1a;
+  --accent-hover: #ff8a4a;
+  --accent-soft: rgba(255, 107, 26, 0.14);
+  --accent-contrast: #0a0e12;
+
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+  --glow: 0 0 24px -4px rgba(255, 107, 26, 0.55);
+
+  --aurora-a: rgba(255, 107, 26, 1);
+  --aurora-b: rgba(232, 93, 14, 1);
+
+  color-scheme: dark;
+}
+
+/* ── Tema claro (cálido, NO una inversión) ── */
+[data-theme="light"] {
+  --bg-0: #faf7f4;
+  --bg-1: #ffffff;
+  --bg-2: #ffffff;
+  --bg-3: #f2ede8;
+
+  --text-1: #1a130d;
+  --text-2: #5c5249;
+  --text-3: #8a7e72;
+
+  --line: rgba(0, 0, 0, 0.08);
+  --line-strong: rgba(0, 0, 0, 0.14);
+
+  /* naranja ajustado para contraste AA sobre fondo claro */
+  --accent: #e85d0e;
+  --accent-hover: #ff6b1a;
+  --accent-soft: rgba(232, 93, 14, 0.1);
+  --accent-contrast: #ffffff;
+
+  --glass: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(0, 0, 0, 0.06);
+
+  --shadow-card: 0 1px 2px rgba(120, 80, 40, 0.06), 0 12px 32px -16px rgba(120, 80, 40, 0.22);
+  --glow: 0 0 22px -6px rgba(232, 93, 14, 0.4);
+
+  --aurora-a: rgba(255, 138, 74, 1);
+  --aurora-b: rgba(255, 107, 26, 1);
+
+  color-scheme: light;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-0);
+    color: var(--text-1);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* foco visible para teclado en toda la app */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+}
+
+@layer utilities {
+  /* superficie de vidrio reutilizable */
+  .glass {
+    background-color: var(--glass);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid var(--glass-border);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .glow {
+    box-shadow: var(--glow);
+  }
+  /* texto con gradiente naranja para números/headlines estrella */
+  .text-gradient {
+    background: linear-gradient(135deg, var(--accent-hover), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* barrido de carga para skeletons */
+  .jmfit-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--glass-border),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: jmfit-shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes jmfit-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Respeta a quienes prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
