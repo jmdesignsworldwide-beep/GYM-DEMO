@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Pencil, RefreshCw, CreditCard } from "lucide-react";
 import { Avatar } from "./Avatar";
+import { PagoModal } from "./PagoModal";
 import { Button } from "@/components/ui/Button";
 import { Accordion } from "@/components/ui/Accordion";
 import { Skeleton } from "@/components/motion/Skeleton";
@@ -28,20 +30,25 @@ export function MiembroFicha({
   miembro: m,
   onEditar,
   onRenovar,
-  onPago,
 }: {
   miembro: Miembro;
   onEditar?: () => void;
   onRenovar?: () => void;
-  onPago?: () => void;
 }) {
+  const router = useRouter();
   const eff = estadoEfectivo(m.estado, m.fecha_vencimiento);
   const est = estadoInfo(eff);
-  const vencido = eff === "vencido";
 
   const [cargando, setCargando] = useState(true);
   const [pagos, setPagos] = useState<PagoHist[]>([]);
   const [accesos, setAccesos] = useState<AccesoHist[]>([]);
+  const [deuda, setDeuda] = useState(m.deuda);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [pagoOpen, setPagoOpen] = useState(false);
+
+  useEffect(() => {
+    setDeuda(m.deuda);
+  }, [m.id, m.deuda]);
 
   useEffect(() => {
     let activo = true;
@@ -56,7 +63,7 @@ export function MiembroFicha({
     return () => {
       activo = false;
     };
-  }, [m.id]);
+  }, [m.id, reloadKey]);
 
   return (
     <div className="space-y-6">
@@ -91,9 +98,9 @@ export function MiembroFicha({
             Reanuda el {formatFechaCorta(m.fecha_reanudacion)}
           </p>
         )}
-        {vencido && (
+        {deuda > 0 && (
           <p className="mt-3 text-sm font-semibold text-red-600 dark:text-red-400">
-            Deuda: {formatRD(m.precio_mensual)}
+            Deuda: {formatRD(deuda)}
           </p>
         )}
       </div>
@@ -106,7 +113,7 @@ export function MiembroFicha({
         <Button variant="secondary" size="md" magnetic={false} onClick={onRenovar}>
           <RefreshCw size={16} /> Renovar
         </Button>
-        <Button variant="secondary" size="md" magnetic={false} onClick={onPago}>
+        <Button variant="secondary" size="md" magnetic={false} onClick={() => setPagoOpen(true)}>
           <CreditCard size={16} /> Registrar pago
         </Button>
       </div>
@@ -203,6 +210,18 @@ export function MiembroFicha({
         <h3 className="mb-1 text-sm font-semibold text-ink-muted">Notas internas</h3>
         <p className="text-sm text-ink">{m.notas || "Sin notas."}</p>
       </div>
+
+      <PagoModal
+        miembro={m}
+        deuda={deuda}
+        open={pagoOpen}
+        onClose={() => setPagoOpen(false)}
+        onDone={(r) => {
+          setDeuda(r.deudaRestante ?? deuda);
+          setReloadKey((k) => k + 1);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

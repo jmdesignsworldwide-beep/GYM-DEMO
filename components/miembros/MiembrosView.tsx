@@ -123,8 +123,7 @@ export function MiembrosView({ miembros }: { miembros: Miembro[] }) {
           <MiembroFicha
             miembro={seleccionado}
             onEditar={abrirEditar}
-            onRenovar={() => setProximamente("Renovar membresía llega en la Tanda 4.")}
-            onPago={() => setProximamente("Registrar pago llega en la Tanda 4.")}
+            onRenovar={() => setProximamente("Renovar membresía llega en la siguiente pieza.")}
           />
         )}
       </Sheet>

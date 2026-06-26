@@ -10,6 +10,7 @@ export type Miembro = {
   plan: string;
   precio_mensual: number;
   estado: string;
+  deuda: number;
   fecha_inicio: string;
   fecha_vencimiento: string;
   fecha_reanudacion: string | null;
@@ -21,10 +22,14 @@ export type Miembro = {
 };
 
 const COLS =
-  "id,nombre,cedula,telefono,email,direccion,plan,precio_mensual,estado,fecha_inicio,fecha_vencimiento,fecha_reanudacion,codigo,foto_url,contacto_emergencia_nombre,contacto_emergencia_telefono,notas";
+  "id,nombre,cedula,telefono,email,direccion,plan,precio_mensual,estado,deuda,fecha_inicio,fecha_vencimiento,fecha_reanudacion,codigo,foto_url,contacto_emergencia_nombre,contacto_emergencia_telefono,notas";
 
 export async function getMiembros(): Promise<Miembro[]> {
   const sb = getServerSupabase();
   const { data } = await sb.from("miembros").select(COLS).order("nombre").limit(2000);
-  return (data ?? []).map((m) => ({ ...m, precio_mensual: Number(m.precio_mensual) })) as Miembro[];
+  return (data ?? []).map((m) => ({
+    ...m,
+    precio_mensual: Number(m.precio_mensual),
+    deuda: Number(m.deuda),
+  })) as Miembro[];
 }
