@@ -118,9 +118,11 @@ export function MiembroFicha({
 
       {/* Acciones */}
       <div className="flex flex-wrap gap-2">
-        <Button size="md" magnetic={false} onClick={onEditar}>
-          <Pencil size={16} /> Editar
-        </Button>
+        {onEditar && (
+          <Button size="md" magnetic={false} onClick={onEditar}>
+            <Pencil size={16} /> Editar
+          </Button>
+        )}
         <Button variant="secondary" size="md" magnetic={false} onClick={() => setRenovarOpen(true)}>
           <RefreshCw size={16} /> Renovar
         </Button>
