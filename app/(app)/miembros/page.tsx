@@ -1,5 +1,9 @@
-import { Placeholder } from "@/components/layout/Placeholder";
+import { MiembrosView } from "@/components/miembros/MiembrosView";
+import { getMiembros } from "@/lib/miembros/data";
 
-export default function MiembrosPage() {
-  return <Placeholder title="Miembros" />;
+export const dynamic = "force-dynamic";
+
+export default async function MiembrosPage() {
+  const miembros = await getMiembros();
+  return <MiembrosView miembros={miembros} />;
 }
