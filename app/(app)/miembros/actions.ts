@@ -93,3 +93,67 @@ export async function guardarMiembro(formData: FormData): Promise<GuardarResult>
   revalidatePath("/dashboard");
   return { ok: true };
 }
+
+export type PagoInput = {
+  miembroId: string;
+  monto: number;
+  metodo: string;
+  categoria: string;
+  fecha: string; // YYYY-MM-DD
+};
+
+export type PagoResult = {
+  ok: boolean;
+  error?: string;
+  abonado?: number;
+  deudaRestante?: number;
+};
+
+function fechaConHora(fecha: string): string {
+  const hoy = new Date().toISOString().slice(0, 10);
+  return fecha === hoy ? new Date().toISOString() : `${fecha}T12:00:00.000Z`;
+}
+
+export async function registrarPago(input: PagoInput): Promise<PagoResult> {
+  const { miembroId, metodo, categoria, fecha } = input;
+  const monto = Number(input.monto);
+
+  if (!miembroId) return { ok: false, error: "Miembro no válido." };
+  if (!monto || monto <= 0) return { ok: false, error: "El monto debe ser mayor que cero." };
+  if (!metodo) return { ok: false, error: "Selecciona un método de pago." };
+  if (!categoria) return { ok: false, error: "Selecciona una categoría." };
+  if (!fecha) return { ok: false, error: "La fecha es obligatoria." };
+
+  const sb = getAdminSupabase();
+
+  const { data: miembro, error: mErr } = await sb
+    .from("miembros")
+    .select("deuda")
+    .eq("id", miembroId)
+    .single();
+  if (mErr || !miembro) return { ok: false, error: "No se encontró el miembro." };
+
+  const { error: pErr } = await sb.from("pagos").insert({
+    miembro_id: miembroId,
+    monto,
+    metodo,
+    categoria,
+    fecha: fechaConHora(fecha),
+  });
+  if (pErr) return { ok: false, error: "No se pudo registrar el pago." };
+
+  // El pago baja la deuda solo si es de membresía.
+  const deudaActual = Number(miembro.deuda) || 0;
+  let abonado = 0;
+  let deudaRestante = deudaActual;
+  if (categoria === "mensualidad" && deudaActual > 0) {
+    abonado = Math.min(monto, deudaActual);
+    deudaRestante = Math.max(0, deudaActual - monto);
+    await sb.from("miembros").update({ deuda: deudaRestante }).eq("id", miembroId);
+  }
+
+  revalidatePath("/miembros");
+  revalidatePath("/dashboard");
+  revalidatePath("/pagos");
+  return { ok: true, abonado, deudaRestante };
+}
