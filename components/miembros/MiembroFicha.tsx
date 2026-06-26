@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Pencil, RefreshCw, CreditCard } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/motion/Skeleton";
 import { estadoInfo } from "@/lib/miembros/estado";
-import { formatFechaCorta, formatRD } from "@/lib/format";
+import { formatFechaCorta, formatFechaHora, formatRD } from "@/lib/format";
+import { getHistorial, type PagoHist, type AccesoHist } from "@/lib/miembros/historial";
 import type { Miembro } from "@/lib/miembros/data";
 
 function Dato({ label, value }: { label: string; value: string | null }) {
@@ -14,6 +17,10 @@ function Dato({ label, value }: { label: string; value: string | null }) {
       <dd className="text-right text-sm font-medium text-ink">{value || "—"}</dd>
     </div>
   );
+}
+
+function cap(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export function MiembroFicha({
@@ -29,6 +36,25 @@ export function MiembroFicha({
 }) {
   const est = estadoInfo(m.estado);
   const vencido = m.estado === "vencido";
+
+  const [cargando, setCargando] = useState(true);
+  const [pagos, setPagos] = useState<PagoHist[]>([]);
+  const [accesos, setAccesos] = useState<AccesoHist[]>([]);
+
+  useEffect(() => {
+    let activo = true;
+    setCargando(true);
+    getHistorial(m.id)
+      .then((h) => {
+        if (!activo) return;
+        setPagos(h.pagos);
+        setAccesos(h.accesos);
+      })
+      .finally(() => activo && setCargando(false));
+    return () => {
+      activo = false;
+    };
+  }, [m.id]);
 
   return (
     <div className="space-y-6">
@@ -94,6 +120,66 @@ export function MiembroFicha({
           <Dato label="Inscripción" value={formatFechaCorta(m.fecha_inicio)} />
           <Dato label="Mensualidad" value={formatRD(m.precio_mensual)} />
         </dl>
+      </div>
+
+      {/* Historial de pagos (del miembro) */}
+      <div>
+        <h3 className="mb-2 text-sm font-semibold text-ink-muted">Historial de pagos</h3>
+        {cargando ? (
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        ) : pagos.length === 0 ? (
+          <p className="py-3 text-sm text-ink-faint">Sin pagos registrados.</p>
+        ) : (
+          <ul className="space-y-1">
+            {pagos.map((p) => (
+              <li
+                key={p.id}
+                className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-bg-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-ink">{cap(p.categoria)}</p>
+                  <p className="truncate text-xs text-ink-faint">
+                    {cap(p.metodo)} · {formatFechaHora(p.fecha)}
+                  </p>
+                </div>
+                <span className="shrink-0 tabular-nums text-sm font-semibold text-ink">
+                  {formatRD(p.monto)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Historial de accesos (del miembro) */}
+      <div>
+        <h3 className="mb-2 text-sm font-semibold text-ink-muted">Historial de accesos</h3>
+        {cargando ? (
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ) : accesos.length === 0 ? (
+          <p className="py-3 text-sm text-ink-faint">Sin accesos registrados.</p>
+        ) : (
+          <ul className="space-y-1">
+            {accesos.map((a) => (
+              <li
+                key={a.id}
+                className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-bg-2"
+              >
+                <span className="text-sm text-ink">{formatFechaHora(a.entrada)}</span>
+                <span className="shrink-0 text-xs text-ink-faint">
+                  {a.salida ? "Salió" : "Activo"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Contacto de emergencia */}
