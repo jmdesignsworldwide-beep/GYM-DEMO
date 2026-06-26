@@ -1,10 +1,10 @@
-import { Placeholder } from "@/components/layout/Placeholder";
+import { DashboardView } from "@/components/dashboard/DashboardView";
+import { getDashboardData } from "@/lib/dashboard/data";
 
-export default function DashboardPage() {
-  return (
-    <Placeholder
-      title="Dashboard"
-      description="Aquí latirá el pulso de JM FIT: ingresos, asistencia y renovaciones. Próximamente."
-    />
-  );
+// Siempre fresco: el dashboard refleja los datos actuales de Supabase.
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const data = await getDashboardData();
+  return <DashboardView data={data} />;
 }
