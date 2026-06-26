@@ -5,6 +5,7 @@ import {
   CreditCard,
   Dumbbell,
   BarChart3,
+  CalendarClock,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ export const navItems: NavItem[] = [
   { href: "/acceso", label: "Acceso", icon: DoorOpen },
   { href: "/miembros", label: "Miembros", icon: Users },
   { href: "/pagos", label: "Pagos", icon: CreditCard },
+  { href: "/calendario", label: "Calendario", icon: CalendarClock },
   { href: "/clases", label: "Clases", icon: Dumbbell },
   { href: "/reportes", label: "Reportes", icon: BarChart3 },
   { href: "/configuracion", label: "Configuración", icon: Settings },
