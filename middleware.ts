@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const APP_PATHS = [
   "/dashboard",
   "/miembros",
+  "/empleados",
   "/pagos",
   "/caja",
   "/pos",
@@ -13,6 +14,8 @@ const APP_PATHS = [
   "/acceso",
   "/calendario",
   "/clases",
+  "/entrenamiento",
+  "/nutricion",
   "/reportes",
   "/configuracion",
 ];

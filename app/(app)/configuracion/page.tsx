@@ -19,13 +19,16 @@ export default async function ConfiguracionPage() {
   const sb = getSupabaseServer();
   const { data } = await sb
     .from("perfiles")
-    .select("user_id,username,rol,activo,acceso_expira,creado_por,created_at")
+    .select("user_id,username,rol,activo,super_admin,acceso_expira,creado_por,created_at")
     .order("created_at");
 
   const rows = data ?? [];
 
   const usuarios = rows
     .filter((u) => !u.creado_por)
+    // Las cuentas super-admin (JM Designs) solo las ve otro super-admin;
+    // así una cuenta de cliente no ve ni gestiona la cuenta dueña del sistema.
+    .filter((u) => perfil.superAdmin || u.super_admin !== true)
     .map((u) => ({
       userId: u.user_id as string,
       username: (u.username as string) ?? "—",

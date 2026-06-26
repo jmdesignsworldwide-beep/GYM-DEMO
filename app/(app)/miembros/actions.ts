@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { requireSesion } from "@/lib/auth/perfil";
 import {
   cedulaValida,
   telefonoValido,
@@ -15,6 +16,7 @@ export type GuardarResult = { ok: boolean; error?: string };
 const s = (fd: FormData, k: string) => ((fd.get(k) as string) ?? "").trim();
 
 export async function guardarMiembro(formData: FormData): Promise<GuardarResult> {
+  await requireSesion();
   const id = s(formData, "id") || null;
   const nombre = s(formData, "nombre");
   const cedula = s(formData, "cedula");
@@ -115,6 +117,7 @@ function fechaConHora(fecha: string): string {
 }
 
 export async function registrarPago(input: PagoInput): Promise<PagoResult> {
+  await requireSesion();
   const { miembroId, metodo, categoria, fecha } = input;
   const monto = Number(input.monto);
 
@@ -183,6 +186,7 @@ function nuevaVencimiento(base: string, meses: number): string {
 }
 
 export async function renovarMembresia(input: RenovarInput): Promise<RenovarResult> {
+  await requireSesion();
   const { miembroId, plan, conPago, metodo } = input;
   const meses = Number(input.meses);
   const precioMensual = Number(input.precioMensual);
