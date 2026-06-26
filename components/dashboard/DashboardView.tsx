@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { TrendingUp, Users, ShieldAlert } from "lucide-react";
+import { TrendingUp, Users, ShieldAlert, Package, Wrench } from "lucide-react";
 import { Aurora } from "@/components/Aurora";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import { CajaDelDia } from "./CajaDelDia";
@@ -70,6 +71,35 @@ export function DashboardView({ data, rol }: { data: DashboardData; rol: string 
           <h1 className="font-display text-title font-semibold text-ink">Resumen de hoy</h1>
           <p className="mt-1 text-sm text-ink-muted">{data.fechaLabel}</p>
         </div>
+
+        {esAdmin && (data.stockBajo > 0 || data.equiposAlerta > 0) && (
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            {data.stockBajo > 0 && (
+              <Link
+                href="/inventario"
+                className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm transition-colors hover:bg-amber-500/15"
+              >
+                <Package size={18} className="shrink-0 text-amber-600 dark:text-amber-400" />
+                <span className="text-ink">
+                  <b>{data.stockBajo}</b>{" "}
+                  {data.stockBajo === 1 ? "producto con stock bajo" : "productos con stock bajo"}
+                </span>
+              </Link>
+            )}
+            {data.equiposAlerta > 0 && (
+              <Link
+                href="/equipos"
+                className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm transition-colors hover:bg-amber-500/15"
+              >
+                <Wrench size={18} className="shrink-0 text-amber-600 dark:text-amber-400" />
+                <span className="text-ink">
+                  <b>{data.equiposAlerta}</b>{" "}
+                  {data.equiposAlerta === 1 ? "equipo por mantener" : "equipos por mantener"}
+                </span>
+              </Link>
+            )}
+          </div>
+        )}
 
         <StaggerGroup className="space-y-4">
           {esAdmin ? (

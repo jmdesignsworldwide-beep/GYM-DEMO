@@ -1,5 +1,6 @@
 import { getServerSupabase } from "@/lib/supabase/server";
 import { estadoEfectivo, hoyISO } from "@/lib/miembros/estado";
+import { mantenimientoInfo } from "@/lib/inventario/equipos";
 
 // ── Tipos del dashboard ─────────────────────────────────────────────
 export type MiembroLite = {
@@ -34,6 +35,8 @@ export type DashboardData = {
   pendientes: MiembroLite[];
   ultimosAccesos: AccesoReciente[];
   tendencia: PuntoTendencia[];
+  stockBajo: number;
+  equiposAlerta: number;
 };
 
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -70,10 +73,12 @@ function groupSum<T>(rows: T[], key: (r: T) => string, val: (r: T) => number) {
 export async function getDashboardData(): Promise<DashboardData> {
   const sb = getServerSupabase();
 
-  const [miembrosRes, pagosRes, accesosRes] = await Promise.all([
+  const [miembrosRes, pagosRes, accesosRes, productosRes, equiposRes] = await Promise.all([
     sb.from("miembros").select("id,nombre,plan,telefono,precio_mensual,estado,fecha_vencimiento").limit(1000),
     sb.from("pagos").select("monto,metodo,categoria,fecha").limit(3000),
     sb.from("accesos").select("entrada,salida,miembro_id").limit(3000),
+    sb.from("productos").select("stock,umbral_alerta").eq("activo", true).limit(1000),
+    sb.from("equipos").select("proximo_mantenimiento").limit(500),
   ]);
 
   const miembros = (miembrosRes.data ?? []).map((m) => ({
@@ -187,6 +192,13 @@ export async function getDashboardData(): Promise<DashboardData> {
   const fechaCruda = `${DIAS[dref.getUTCDay()]}, ${dref.getUTCDate()} de ${MESES_LARGO[dref.getUTCMonth()]}`;
   const fechaLabel = fechaCruda.charAt(0).toUpperCase() + fechaCruda.slice(1);
 
+  const stockBajo = (productosRes.data ?? []).filter(
+    (p) => Number(p.stock) <= Number(p.umbral_alerta),
+  ).length;
+  const equiposAlerta = (equiposRes.data ?? []).filter(
+    (e) => mantenimientoInfo((e.proximo_mantenimiento as string) ?? null, hoy)?.urgente,
+  ).length;
+
   return {
     fechaLabel,
     cajaHoy,
@@ -202,5 +214,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     pendientes,
     ultimosAccesos,
     tendencia,
+    stockBajo,
+    equiposAlerta,
   };
 }
