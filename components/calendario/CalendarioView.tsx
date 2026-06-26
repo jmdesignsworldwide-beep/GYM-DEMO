@@ -104,8 +104,8 @@ export function CalendarioView({ miembros }: { miembros: Miembro[] }) {
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         {/* Grilla del mes */}
         <Card glowOnHover={false}>
-          <p className="mb-3 font-display text-sm font-semibold capitalize text-ink">
-            {MESES_LARGO[month]} {year}
+          <p className="mb-3 font-display text-sm font-semibold text-ink">
+            {MESES_LARGO[month].charAt(0).toUpperCase() + MESES_LARGO[month].slice(1)} {year}
           </p>
           <div className="grid grid-cols-7 gap-1 text-center">
             {DIAS.map((d, i) => (

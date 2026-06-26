@@ -100,7 +100,11 @@ export function RenovarModal({
               Pago de renovación: <span className="font-semibold">{formatRD(done.cobrado ?? 0)}</span>
             </p>
           )}
-          <p className="text-xs text-ink-faint">Documento de ejemplo generado para demostración.</p>
+          <p className="text-xs text-ink-faint">
+            Documento de ejemplo generado para demostración.
+            <br />
+            NCF simulado para demostración. No certificado ante la DGII.
+          </p>
           <Button magnetic={false} className="w-full" onClick={onClose}>
             Listo
           </Button>

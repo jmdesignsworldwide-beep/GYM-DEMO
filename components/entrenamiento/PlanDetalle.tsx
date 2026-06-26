@@ -30,7 +30,7 @@ const field =
 const ESTADO_BADGE: Record<string, string> = {
   reservada: "bg-accent-soft text-accent",
   completada: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  cancelada: "bg-zinc-500/15 text-zinc-500",
+  cancelada: "bg-bg-3 text-ink-muted",
 };
 
 export function PlanDetalle({
@@ -178,7 +178,7 @@ export function PlanDetalle({
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
         />
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <select className={field} value={tipo} onChange={(e) => setTipo(e.target.value)}>
             <option value="incluida">Incluida en el plan</option>
             <option value="adicional">Adicional (se cobra)</option>
@@ -252,7 +252,7 @@ export function PlanDetalle({
               <p className="flex items-center gap-1.5 text-sm font-semibold text-ink-muted">
                 <Plus size={14} /> Registrar medida
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <input className={field} type="number" step="0.1" placeholder="Peso kg" value={prog.peso} onChange={(e) => setProg((s) => ({ ...s, peso: e.target.value }))} />
                 <input className={field} type="number" step="0.1" placeholder="% grasa" value={prog.grasa} onChange={(e) => setProg((s) => ({ ...s, grasa: e.target.value }))} />
                 <input className={field} type="number" step="0.1" placeholder="Cintura" value={prog.cintura} onChange={(e) => setProg((s) => ({ ...s, cintura: e.target.value }))} />

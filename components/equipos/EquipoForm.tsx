@@ -105,7 +105,7 @@ export function EquipoForm({
           <input className={field} value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />
         </label>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink-muted">Categoría</span>
             <select className={field} value={form.categoria} onChange={(e) => set("categoria", e.target.value)}>
@@ -128,7 +128,7 @@ export function EquipoForm({
           </label>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink-muted">Última revisión</span>
             <input

@@ -91,7 +91,7 @@ export function ClaseForm({
         </select>
       </label>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-ink-muted">Día</span>
           <select
@@ -112,7 +112,7 @@ export function ClaseForm({
         </label>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-ink-muted">Duración (min)</span>
           <input
@@ -135,7 +135,7 @@ export function ClaseForm({
         </label>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-ink-muted">Sala / ubicación</span>
           <input className={field} value={form.sala} onChange={(e) => set("sala", e.target.value)} />

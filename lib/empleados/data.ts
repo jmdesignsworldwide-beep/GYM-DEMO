@@ -84,7 +84,7 @@ export function estadoEmpleado(estado: string): { label: string; badge: string; 
   if (estado === "inactivo") {
     return {
       label: "Inactivo",
-      badge: "bg-zinc-500/15 text-zinc-500",
+      badge: "bg-bg-3 text-ink-muted",
       dot: "bg-zinc-400",
     };
   }

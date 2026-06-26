@@ -158,7 +158,7 @@ export function PlanNutricionDetalle({
           <p className="flex items-center gap-1.5 text-sm font-semibold text-ink-muted">
             <Plus size={14} /> Agregar comida
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <select className={field} value={momento} onChange={(e) => setMomento(e.target.value)}>
               {MOMENTOS.map((m) => (
                 <option key={m} value={m}>
