@@ -1,31 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Bell, Menu } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { getSupabase } from "@/lib/supabase/client";
 
-export function Header({ onMenu }: { onMenu: () => void }) {
-  const [username, setUsername] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    getSupabase()
-      .auth.getUser()
-      .then(({ data }) => {
-        if (!active) return;
-        const email = data.user?.email ?? "";
-        const name = email.split("@")[0];
-        if (name) setUsername(name);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
-
+export function Header({
+  onMenu,
+  username,
+  rol,
+}: {
+  onMenu: () => void;
+  username: string;
+  rol: string;
+}) {
   const display = username || "Usuaria";
+  const rolLabel = rol === "admin" ? "Admin" : "Cajero";
 
   return (
     <header className="glass sticky top-0 z-20 border-x-0 border-t-0">
@@ -62,7 +51,10 @@ export function Header({ onMenu }: { onMenu: () => void }) {
             <span className="grid h-9 w-9 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent">
               {display.charAt(0).toUpperCase()}
             </span>
-            <span className="hidden text-sm text-ink sm:inline">{display}</span>
+            <div className="hidden leading-tight sm:block">
+              <p className="text-sm text-ink">{display}</p>
+              <p className="text-xs text-ink-faint">{rolLabel}</p>
+            </div>
           </div>
         </div>
       </div>

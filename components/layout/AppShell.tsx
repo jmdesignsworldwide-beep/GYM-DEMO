@@ -11,7 +11,15 @@ import { Header } from "./Header";
  * móvil, header y área de contenido con transición suave entre vistas.
  * El drawer se desmonta al cerrar (no bloquea toques en móvil).
  */
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  rol,
+  username,
+}: {
+  children: React.ReactNode;
+  rol: string;
+  username: string;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -32,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen">
       {/* Sidebar — escritorio */}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r border-line bg-bg-1 lg:block">
-        <SidebarNav />
+        <SidebarNav rol={rol} />
       </aside>
 
       {/* Drawer — móvil (montado solo cuando está abierto) */}
@@ -54,7 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 34 }}
             >
-              <SidebarNav onNavigate={() => setOpen(false)} />
+              <SidebarNav rol={rol} onNavigate={() => setOpen(false)} />
             </motion.aside>
           </div>
         )}
@@ -62,7 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Contenido */}
       <div className="lg:pl-64">
-        <Header onMenu={() => setOpen(true)} />
+        <Header onMenu={() => setOpen(true)} username={username} rol={rol} />
         <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
           <AnimatePresence mode="wait">
             <motion.div

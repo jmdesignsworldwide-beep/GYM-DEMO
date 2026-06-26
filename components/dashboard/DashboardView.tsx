@@ -1,6 +1,7 @@
 "use client";
 
-import { TrendingUp, Users } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { TrendingUp, Users, ShieldAlert } from "lucide-react";
 import { Aurora } from "@/components/Aurora";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import { CajaDelDia } from "./CajaDelDia";
@@ -17,7 +18,11 @@ import type { DashboardData } from "@/lib/dashboard/data";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export function DashboardView({ data }: { data: DashboardData }) {
+export function DashboardView({ data, rol }: { data: DashboardData; rol: string }) {
+  const esAdmin = rol === "admin";
+  const params = useSearchParams();
+  const denegado = params.get("denegado") === "1";
+
   const detalleIngresos = (
     <Breakdown items={data.tendencia.map((t) => ({ label: cap(t.mes), value: t.total }))} />
   );
@@ -38,10 +43,28 @@ export function DashboardView({ data }: { data: DashboardData }) {
     </div>
   );
 
+  const miembrosCard = (
+    <StatCard
+      label="Miembros activos"
+      value={data.miembrosActivos}
+      icon={Users}
+      hint="Toca para el resumen"
+      detailTitle="Miembros por plan"
+      detail={detalleMiembros}
+    />
+  );
+
   return (
     <FichaProvider>
       <div className="relative">
         <Aurora intensity="subtle" />
+
+        {denegado && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-accent bg-accent-soft px-4 py-3 text-sm text-ink">
+            <ShieldAlert size={18} className="shrink-0 text-accent" />
+            No tienes acceso a esa sección.
+          </div>
+        )}
 
         <div className="mb-6">
           <h1 className="font-display text-title font-semibold text-ink">Resumen de hoy</h1>
@@ -49,49 +72,55 @@ export function DashboardView({ data }: { data: DashboardData }) {
         </div>
 
         <StaggerGroup className="space-y-4">
-          {/* Fila 1 — la estrella + KPIs principales */}
-          <div className="grid gap-4 lg:grid-cols-4">
-            <StaggerItem className="lg:col-span-2">
-              <CajaDelDia
-                total={data.cajaHoy.total}
-                porMetodo={data.cajaHoy.porMetodo}
-                porCategoria={data.cajaHoy.porCategoria}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatCard
-                label="Ingresos del mes"
-                value={data.ingresosMes}
-                prefix="RD$ "
-                icon={TrendingUp}
-                hint="Toca para la tendencia"
-                detailTitle="Ingresos por mes"
-                detail={detalleIngresos}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatCard
-                label="Miembros activos"
-                value={data.miembrosActivos}
-                icon={Users}
-                hint="Toca para el resumen"
-                detailTitle="Miembros por plan"
-                detail={detalleMiembros}
-              />
-            </StaggerItem>
-          </div>
+          {esAdmin ? (
+            <>
+              {/* Fila 1 — estrella + KPIs (admin) */}
+              <div className="grid gap-4 lg:grid-cols-4">
+                <StaggerItem className="lg:col-span-2">
+                  <CajaDelDia
+                    total={data.cajaHoy.total}
+                    porMetodo={data.cajaHoy.porMetodo}
+                    porCategoria={data.cajaHoy.porCategoria}
+                  />
+                </StaggerItem>
+                <StaggerItem>
+                  <StatCard
+                    label="Ingresos del mes"
+                    value={data.ingresosMes}
+                    prefix="RD$ "
+                    icon={TrendingUp}
+                    hint="Toca para la tendencia"
+                    detailTitle="Ingresos por mes"
+                    detail={detalleIngresos}
+                  />
+                </StaggerItem>
+                <StaggerItem>{miembrosCard}</StaggerItem>
+              </div>
 
-          {/* Fila 2 — el pulso vivo */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <StaggerItem>
-              <EnGymAhora count={data.enGymAhora} lista={data.enGymLista} />
-            </StaggerItem>
-            <StaggerItem>
-              <VencenSemana miembros={data.vencenSemana} />
-            </StaggerItem>
-          </div>
+              {/* Fila 2 — pulso */}
+              <div className="grid gap-4 lg:grid-cols-2">
+                <StaggerItem>
+                  <EnGymAhora count={data.enGymAhora} lista={data.enGymLista} />
+                </StaggerItem>
+                <StaggerItem>
+                  <VencenSemana miembros={data.vencenSemana} />
+                </StaggerItem>
+              </div>
+            </>
+          ) : (
+            /* Cajero — solo operativo (sin caja, ingresos ni tendencia) */
+            <div className="grid gap-4 lg:grid-cols-3">
+              <StaggerItem>{miembrosCard}</StaggerItem>
+              <StaggerItem>
+                <EnGymAhora count={data.enGymAhora} lista={data.enGymLista} />
+              </StaggerItem>
+              <StaggerItem>
+                <VencenSemana miembros={data.vencenSemana} />
+              </StaggerItem>
+            </div>
+          )}
 
-          {/* Fila 3 — acción y alertas */}
+          {/* Fila acción — ambos roles */}
           <div className="grid gap-4 lg:grid-cols-3">
             <StaggerItem>
               <VencenHoy miembros={data.vencenHoy} />
@@ -104,10 +133,12 @@ export function DashboardView({ data }: { data: DashboardData }) {
             </StaggerItem>
           </div>
 
-          {/* Fila 4 — tendencia */}
-          <StaggerItem>
-            <TendenciaChart data={data.tendencia} />
-          </StaggerItem>
+          {/* Tendencia — solo admin */}
+          {esAdmin && (
+            <StaggerItem>
+              <TendenciaChart data={data.tendencia} />
+            </StaggerItem>
+          )}
         </StaggerGroup>
       </div>
     </FichaProvider>

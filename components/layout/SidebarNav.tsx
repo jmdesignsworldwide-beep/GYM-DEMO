@@ -11,9 +11,16 @@ import { signOut } from "@/lib/auth";
  * Contenido de navegación, compartido por el sidebar de escritorio y el
  * drawer de móvil. `onNavigate` cierra el drawer al tocar un enlace.
  */
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({
+  onNavigate,
+  rol = "admin",
+}: {
+  onNavigate?: () => void;
+  rol?: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
+  const items = navItems.filter((it) => !it.soloAdmin || rol === "admin");
 
   async function handleLogout() {
     await signOut();
@@ -28,7 +35,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
           return (
