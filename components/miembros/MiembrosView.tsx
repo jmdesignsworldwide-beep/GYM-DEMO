@@ -6,7 +6,6 @@ import { Search, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Sheet } from "@/components/ui/Sheet";
-import { Modal } from "@/components/ui/Modal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import { MiembroRow } from "./MiembroRow";
 import { MiembroFicha } from "./MiembroFicha";
@@ -23,7 +22,6 @@ export function MiembrosView({ miembros }: { miembros: Miembro[] }) {
   const [seleccionado, setSeleccionado] = useState<Miembro | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [formMiembro, setFormMiembro] = useState<Miembro | null>(null);
-  const [proximamente, setProximamente] = useState<string | null>(null);
 
   const filtrados = useMemo(() => {
     const term = normaliza(q.trim());
@@ -120,11 +118,7 @@ export function MiembrosView({ miembros }: { miembros: Miembro[] }) {
       {/* Ficha en panel lateral */}
       <Sheet open={!!seleccionado} onClose={() => setSeleccionado(null)} title="Ficha del miembro">
         {seleccionado && (
-          <MiembroFicha
-            miembro={seleccionado}
-            onEditar={abrirEditar}
-            onRenovar={() => setProximamente("Renovar membresía llega en la siguiente pieza.")}
-          />
+          <MiembroFicha miembro={seleccionado} onEditar={abrirEditar} />
         )}
       </Sheet>
 
@@ -143,10 +137,6 @@ export function MiembrosView({ miembros }: { miembros: Miembro[] }) {
         )}
       </Sheet>
 
-      {/* Placeholder de ganchos (Tanda 4) */}
-      <Modal open={!!proximamente} onClose={() => setProximamente(null)} title="Próximamente">
-        <p className="text-sm text-ink">{proximamente}</p>
-      </Modal>
     </div>
   );
 }
