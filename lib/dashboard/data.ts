@@ -23,7 +23,11 @@ export type DashboardData = {
   };
   ingresosMes: number;
   miembrosActivos: number;
+  totalMiembros: number;
+  vencidos: number;
+  planes: { plan: string; count: number }[];
   enGymAhora: number;
+  enGymLista: MiembroLite[];
   vencenSemana: MiembroLite[];
   vencenHoy: MiembroLite[];
   pendientes: MiembroLite[];
@@ -131,7 +135,25 @@ export async function getDashboardData(): Promise<DashboardData> {
   }
 
   const miembrosActivos = miembros.filter((m) => m.estado === "activo").length;
-  const enGymAhora = accesos.filter((a) => a.salida === null).length;
+
+  // Gente en el gym ahora: miembros DISTINTOS con acceso activo (salida null).
+  const enGymIds = new Set<string>();
+  const enGymLista: MiembroLite[] = [];
+  for (const a of accesos) {
+    if (a.salida !== null) continue;
+    if (enGymIds.has(a.miembro_id)) continue;
+    enGymIds.add(a.miembro_id);
+    const m = miembroPorId.get(a.miembro_id);
+    if (m) enGymLista.push(m);
+  }
+  const enGymAhora = enGymLista.length;
+
+  // Resumen por plan
+  const planMap = new Map<string, number>();
+  for (const m of miembros) planMap.set(m.plan, (planMap.get(m.plan) ?? 0) + 1);
+  const planes = Array.from(planMap, ([plan, count]) => ({ plan, count })).sort(
+    (a, b) => b.count - a.count,
+  );
 
   const semanaFin = addDaysUTC(refDate, 6);
   const vencenHoy = miembros.filter((m) => m.fecha_vencimiento === refDate);
@@ -143,25 +165,33 @@ export async function getDashboardData(): Promise<DashboardData> {
     .filter((m) => m.estado === "vencido")
     .sort((a, b) => b.precio_mensual - a.precio_mensual);
 
-  const ultimosAccesos: AccesoReciente[] = [...accesos]
-    .sort((a, b) => b.entrada.localeCompare(a.entrada))
-    .slice(0, 8)
-    .map((a) => {
-      const m = miembroPorId.get(a.miembro_id);
-      return { ...(m as MiembroLite), hora: horaLabel(a.entrada) };
-    })
-    .filter((a) => a.id);
+  // Últimos accesos: miembros DISTINTOS, del más reciente al más antiguo.
+  const vistos = new Set<string>();
+  const ultimosAccesos: AccesoReciente[] = [];
+  for (const a of [...accesos].sort((x, y) => y.entrada.localeCompare(x.entrada))) {
+    if (vistos.has(a.miembro_id)) continue;
+    const m = miembroPorId.get(a.miembro_id);
+    if (!m) continue;
+    vistos.add(a.miembro_id);
+    ultimosAccesos.push({ ...m, hora: horaLabel(a.entrada) });
+    if (ultimosAccesos.length >= 8) break;
+  }
 
-  // Etiqueta de fecha en español
+  // Etiqueta de fecha en español: solo la inicial en mayúscula ("Miércoles, 24 de junio").
   const dref = new Date(`${refDate}T00:00:00Z`);
-  const fechaLabel = `${DIAS[dref.getUTCDay()]}, ${dref.getUTCDate()} de ${MESES_LARGO[dref.getUTCMonth()]}`;
+  const fechaCruda = `${DIAS[dref.getUTCDay()]}, ${dref.getUTCDate()} de ${MESES_LARGO[dref.getUTCMonth()]}`;
+  const fechaLabel = fechaCruda.charAt(0).toUpperCase() + fechaCruda.slice(1);
 
   return {
     fechaLabel,
     cajaHoy,
     ingresosMes,
     miembrosActivos,
+    totalMiembros: miembros.length,
+    vencidos: pendientes.length,
+    planes,
     enGymAhora,
+    enGymLista,
     vencenSemana,
     vencenHoy,
     pendientes,
