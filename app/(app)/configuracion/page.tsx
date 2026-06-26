@@ -1,13 +1,13 @@
 import { ConfiguracionView } from "@/components/configuracion/ConfiguracionView";
 import { getSessionPerfil } from "@/lib/auth/perfil";
-import { getSupabaseServer } from "@/lib/supabase/ssr-server";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function ConfiguracionPage() {
   const perfil = await getSessionPerfil();
 
-  if (!perfil || perfil.rol !== "admin") {
+  if (!perfil || perfil.expirado || perfil.rol !== "admin") {
     return (
       <div className="mx-auto max-w-md py-20 text-center">
         <h1 className="font-display text-xl font-semibold text-ink">Sin acceso</h1>
@@ -16,7 +16,10 @@ export default async function ConfiguracionPage() {
     );
   }
 
-  const sb = getSupabaseServer();
+  // Lectura con la llave de servicio: la página ya está protegida por rol en
+  // el servidor, y el RLS de `perfiles` ahora solo deja que cada quien vea su
+  // propia cuenta (o el super-admin todas) por la API directa.
+  const sb = getAdminSupabase();
   const { data } = await sb
     .from("perfiles")
     .select("user_id,username,rol,activo,super_admin,acceso_expira,creado_por,created_at")

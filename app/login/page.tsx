@@ -9,7 +9,7 @@ import { Logo } from "@/components/ui/Logo";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { signIn } from "@/lib/auth";
+import { iniciarSesion } from "./actions";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    const result = await signIn(username, password);
+    const result = await iniciarSesion(username, password);
 
     if (result.ok) {
       // Marca para reproducir la bienvenida cinematográfica una vez.
