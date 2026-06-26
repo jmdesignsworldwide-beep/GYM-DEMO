@@ -56,14 +56,27 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Rutas solo-admin: el servidor verifica el rol y bloquea al cajero.
-  if (user && match(path, ADMIN_PATHS)) {
+  // Con sesión y dentro del sistema: el servidor valida vigencia y rol.
+  if (user && match(path, APP_PATHS)) {
     const { data: perfil } = await supabase
       .from("perfiles")
-      .select("rol")
+      .select("rol,acceso_expira")
       .eq("user_id", user.id)
       .single();
-    if (perfil?.rol !== "admin") {
+
+    // Acceso de demostración vencido → bloqueo total, a la pantalla de expirado.
+    const expirado =
+      perfil?.acceso_expira != null &&
+      new Date(perfil.acceso_expira as string).getTime() < Date.now();
+    if (expirado) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/expirado";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    // Rutas solo-admin: bloquea al cajero aun forzando la URL.
+    if (match(path, ADMIN_PATHS) && perfil?.rol !== "admin") {
       const url = req.nextUrl.clone();
       url.pathname = "/dashboard";
       url.searchParams.set("denegado", "1");
