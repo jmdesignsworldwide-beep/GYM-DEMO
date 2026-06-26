@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { requireSesion } from "@/lib/auth/perfil";
 import { estadoEfectivo } from "@/lib/miembros/estado";
 
 export type AccesoResult = { ok: boolean; error?: string };
@@ -11,6 +12,7 @@ export type AccesoResult = { ok: boolean; error?: string };
  * solo se registra si la membresía está activa (estado por fecha en vivo).
  */
 export async function registrarAcceso(miembroId: string): Promise<AccesoResult> {
+  await requireSesion();
   if (!miembroId) return { ok: false, error: "Miembro no válido." };
 
   const sb = getAdminSupabase();
