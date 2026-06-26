@@ -6,7 +6,7 @@ import { Avatar } from "./Avatar";
 import { Button } from "@/components/ui/Button";
 import { Accordion } from "@/components/ui/Accordion";
 import { Skeleton } from "@/components/motion/Skeleton";
-import { estadoInfo } from "@/lib/miembros/estado";
+import { estadoInfo, estadoEfectivo } from "@/lib/miembros/estado";
 import { formatFechaCorta, formatFechaHora, formatRD } from "@/lib/format";
 import { getHistorial, type PagoHist, type AccesoHist } from "@/lib/miembros/historial";
 import type { Miembro } from "@/lib/miembros/data";
@@ -35,8 +35,9 @@ export function MiembroFicha({
   onRenovar?: () => void;
   onPago?: () => void;
 }) {
-  const est = estadoInfo(m.estado);
-  const vencido = m.estado === "vencido";
+  const eff = estadoEfectivo(m.estado, m.fecha_vencimiento);
+  const est = estadoInfo(eff);
+  const vencido = eff === "vencido";
 
   const [cargando, setCargando] = useState(true);
   const [pagos, setPagos] = useState<PagoHist[]>([]);
@@ -85,7 +86,7 @@ export function MiembroFicha({
             <p className="font-medium text-ink">{formatFechaCorta(m.fecha_vencimiento)}</p>
           </div>
         </div>
-        {m.estado === "congelado" && m.fecha_reanudacion && (
+        {eff === "congelado" && m.fecha_reanudacion && (
           <p className="mt-3 text-xs text-sky-600 dark:text-sky-400">
             Reanuda el {formatFechaCorta(m.fecha_reanudacion)}
           </p>

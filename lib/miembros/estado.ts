@@ -45,6 +45,27 @@ export function estadoInfo(estado: string): Info {
   }
 }
 
+// Fecha de hoy (UTC) como 'YYYY-MM-DD'.
+export function hoyISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Estado EFECTIVO calculado en vivo:
+ * - congelado/cancelado son manuales → se respetan tal cual.
+ * - activo vs vencido se deriva de la fecha: activo SOLO si vence > hoy
+ *   (el día de vencimiento ya cuenta como vencido).
+ * Única fuente de verdad para lista, ficha, filtros y dashboard.
+ */
+export function estadoEfectivo(
+  estado: string,
+  fechaVencimiento: string,
+  hoy: string = hoyISO(),
+): string {
+  if (estado === "congelado" || estado === "cancelado") return estado;
+  return fechaVencimiento > hoy ? "activo" : "vencido";
+}
+
 // Normaliza para búsqueda (minúsculas, sin acentos).
 export function normaliza(s: string): string {
   return s

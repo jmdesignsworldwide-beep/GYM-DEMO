@@ -1,4 +1,5 @@
 import { getServerSupabase } from "@/lib/supabase/server";
+import { estadoEfectivo, hoyISO } from "@/lib/miembros/estado";
 
 // ── Tipos del dashboard ─────────────────────────────────────────────
 export type MiembroLite = {
@@ -134,7 +135,11 @@ export async function getDashboardData(): Promise<DashboardData> {
     });
   }
 
-  const miembrosActivos = miembros.filter((m) => m.estado === "activo").length;
+  const hoy = hoyISO();
+  const esManual = (m: MiembroLite) => m.estado === "congelado" || m.estado === "cancelado";
+  const miembrosActivos = miembros.filter(
+    (m) => estadoEfectivo(m.estado, m.fecha_vencimiento, hoy) === "activo",
+  ).length;
 
   // Gente en el gym ahora: miembros DISTINTOS con acceso activo (salida null).
   const enGymIds = new Set<string>();
@@ -155,14 +160,14 @@ export async function getDashboardData(): Promise<DashboardData> {
     (a, b) => b.count - a.count,
   );
 
-  const semanaFin = addDaysUTC(refDate, 6);
-  const vencenHoy = miembros.filter((m) => m.fecha_vencimiento === refDate);
+  const semanaFin = addDaysUTC(hoy, 6);
+  const vencenHoy = miembros.filter((m) => !esManual(m) && m.fecha_vencimiento === hoy);
   const vencenSemana = miembros
-    .filter((m) => m.fecha_vencimiento >= refDate && m.fecha_vencimiento <= semanaFin)
+    .filter((m) => !esManual(m) && m.fecha_vencimiento >= hoy && m.fecha_vencimiento <= semanaFin)
     .sort((a, b) => a.fecha_vencimiento.localeCompare(b.fecha_vencimiento));
 
   const pendientes: MiembroLite[] = miembros
-    .filter((m) => m.estado === "vencido")
+    .filter((m) => estadoEfectivo(m.estado, m.fecha_vencimiento, hoy) === "vencido")
     .sort((a, b) => b.precio_mensual - a.precio_mensual);
 
   // Últimos accesos: miembros DISTINTOS, del más reciente al más antiguo.
