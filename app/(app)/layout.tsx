@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { WelcomeGate } from "@/components/welcome/WelcomeGate";
 import { getSessionPerfil } from "@/lib/auth/perfil";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -7,8 +8,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const username = perfil?.username ?? "Usuaria";
 
   return (
-    <AppShell rol={rol} username={username} accesoExpira={perfil?.accesoExpira ?? null}>
-      {children}
-    </AppShell>
+    <>
+      <WelcomeGate username={username} />
+      <AppShell rol={rol} username={username} accesoExpira={perfil?.accesoExpira ?? null}>
+        {children}
+      </AppShell>
+    </>
   );
 }
