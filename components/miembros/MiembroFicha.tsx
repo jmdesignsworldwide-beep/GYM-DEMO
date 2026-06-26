@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, RefreshCw, CreditCard } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { Button } from "@/components/ui/Button";
+import { Accordion } from "@/components/ui/Accordion";
 import { Skeleton } from "@/components/motion/Skeleton";
 import { estadoInfo } from "@/lib/miembros/estado";
 import { formatFechaCorta, formatFechaHora, formatRD } from "@/lib/format";
@@ -122,12 +123,13 @@ export function MiembroFicha({
         </dl>
       </div>
 
-      {/* Historial de pagos (del miembro) */}
-      <div>
-        <h3 className="mb-2 text-sm font-semibold text-ink-muted">Historial de pagos</h3>
+      {/* Historial de pagos (del miembro) — acordeón */}
+      <Accordion
+        title="Historial de pagos"
+        summary={cargando ? "cargando…" : `${pagos.length} ${pagos.length === 1 ? "pago" : "pagos"}`}
+      >
         {cargando ? (
           <div className="space-y-2">
-            <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
           </div>
@@ -153,11 +155,15 @@ export function MiembroFicha({
             ))}
           </ul>
         )}
-      </div>
+      </Accordion>
 
-      {/* Historial de accesos (del miembro) */}
-      <div>
-        <h3 className="mb-2 text-sm font-semibold text-ink-muted">Historial de accesos</h3>
+      {/* Historial de accesos (del miembro) — acordeón */}
+      <Accordion
+        title="Historial de accesos"
+        summary={
+          cargando ? "cargando…" : `${accesos.length} ${accesos.length === 1 ? "visita" : "visitas"}`
+        }
+      >
         {cargando ? (
           <div className="space-y-2">
             <Skeleton className="h-10 w-full" />
@@ -180,7 +186,7 @@ export function MiembroFicha({
             ))}
           </ul>
         )}
-      </div>
+      </Accordion>
 
       {/* Contacto de emergencia */}
       <div>
