@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { SidebarNav } from "./SidebarNav";
 import { Header } from "./Header";
+import { DemoBanner } from "./DemoBanner";
 
 /**
  * Marco del sistema: sidebar fijo en escritorio, drawer con hamburguesa en
@@ -15,10 +16,12 @@ export function AppShell({
   children,
   rol,
   username,
+  accesoExpira = null,
 }: {
   children: React.ReactNode;
   rol: string;
   username: string;
+  accesoExpira?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -71,6 +74,7 @@ export function AppShell({
       {/* Contenido */}
       <div className="lg:pl-64">
         <Header onMenu={() => setOpen(true)} username={username} rol={rol} />
+        <DemoBanner accesoExpira={accesoExpira} />
         <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
           <AnimatePresence mode="wait">
             <motion.div

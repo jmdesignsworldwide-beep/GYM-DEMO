@@ -7,7 +7,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const username = perfil?.username ?? "Usuaria";
 
   return (
-    <AppShell rol={rol} username={username}>
+    <AppShell rol={rol} username={username} accesoExpira={perfil?.accesoExpira ?? null}>
       {children}
     </AppShell>
   );
