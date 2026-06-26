@@ -9,6 +9,7 @@ import {
   Wrench,
   Dumbbell,
   UserCog,
+  HeartPulse,
   BarChart3,
   CalendarClock,
   Settings,
@@ -36,6 +37,7 @@ export const navItems: NavItem[] = [
   { href: "/equipos", label: "Equipos", icon: Wrench, soloAdmin: true },
   { href: "/calendario", label: "Calendario", icon: CalendarClock },
   { href: "/clases", label: "Clases", icon: Dumbbell },
+  { href: "/entrenamiento", label: "Entrenamiento", icon: HeartPulse },
   { href: "/reportes", label: "Reportes", icon: BarChart3, soloAdmin: true },
   { href: "/configuracion", label: "Configuración", icon: Settings, soloAdmin: true },
 ];
