@@ -28,6 +28,12 @@ export default function LoginPage() {
     const result = await signIn(username, password);
 
     if (result.ok) {
+      // Marca para reproducir la bienvenida cinematográfica una vez.
+      try {
+        sessionStorage.setItem("jmfit:welcome", "1");
+      } catch {
+        // si sessionStorage no está disponible, simplemente no se muestra
+      }
       // Sesión iniciada — al dashboard del sistema.
       router.push("/dashboard");
       router.refresh();
