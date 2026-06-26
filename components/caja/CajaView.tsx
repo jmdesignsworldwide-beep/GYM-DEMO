@@ -7,9 +7,10 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { CountUp } from "@/components/motion/CountUp";
-import { formatRD, formatFechaHora } from "@/lib/format";
+import { formatRD, formatFechaHora, formatFechaCorta } from "@/lib/format";
 import { abrirCaja, registrarEgreso, cerrarCaja, type CierreResult } from "@/app/(app)/caja/actions";
-import type { CajaData } from "@/lib/caja/data";
+import { ListCard } from "@/components/dashboard/ListCard";
+import type { CajaData, Movimiento } from "@/lib/caja/data";
 
 const field =
   "h-12 w-full rounded-lg border bg-bg-2 px-4 text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none";
@@ -24,8 +25,10 @@ const CATEGORIAS_EGRESO = [
   "Otros",
 ];
 
-export function CajaView({ data }: { data: CajaData }) {
+export function CajaView({ data, rol }: { data: CajaData; rol: string }) {
   const router = useRouter();
+  const esAdmin = rol === "admin";
+  const [detalle, setDetalle] = useState<Movimiento | null>(null);
   const [base, setBase] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,30 +179,102 @@ export function CajaView({ data }: { data: CajaData }) {
         </Button>
       </div>
 
-      {/* Egresos del día */}
-      <Card glowOnHover={false} className="mt-6">
-        <h2 className="mb-3 font-display text-sm font-semibold text-ink">Egresos del día</h2>
-        {data.egresos.length === 0 ? (
-          <p className="py-4 text-sm text-ink-faint">Sin egresos registrados hoy.</p>
-        ) : (
-          <ul className="space-y-1">
-            {data.egresos.map((e) => (
-              <li key={e.id} className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-bg-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-ink">{e.categoria}</p>
-                  <p className="truncate text-xs text-ink-faint">
-                    {e.nota ? `${e.nota} · ` : ""}
-                    {formatFechaHora(e.fecha)}
-                  </p>
-                </div>
-                <span className="shrink-0 tabular-nums text-sm font-semibold text-red-500">
-                  − {formatRD(e.monto)}
-                </span>
-              </li>
-            ))}
-          </ul>
+      {/* Movimientos del día */}
+      <div className="mt-6">
+        <ListCard
+          title="Movimientos del día"
+          items={data.movimientos}
+          getKey={(m) => m.id}
+          empty="Sin movimientos hoy."
+          renderRow={(m) => (
+            <button
+              type="button"
+              onClick={() => setDetalle(m)}
+              className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left hover:bg-bg-2"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-ink">{m.etiqueta}</p>
+                <p className="truncate text-xs text-ink-faint">
+                  {m.tipo === "ingreso" ? cap(m.metodo ?? "") : "Egreso"} · {formatFechaHora(m.fecha)}
+                </p>
+              </div>
+              <span
+                className={`shrink-0 tabular-nums text-sm font-semibold ${
+                  m.tipo === "ingreso" ? "text-ink" : "text-red-500"
+                }`}
+              >
+                {m.tipo === "ingreso" ? "" : "− "}
+                {formatRD(m.monto)}
+              </span>
+            </button>
+          )}
+        />
+      </div>
+
+      {/* Reportes + historial de cierres (solo admin) */}
+      {esAdmin && data.reportes && (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <Card glowOnHover={false}>
+            <h2 className="mb-3 font-display text-sm font-semibold text-ink">Reportes</h2>
+            <ReporteFila titulo="Esta semana" r={data.reportes.semana} />
+            <div className="my-2 border-t border-line" />
+            <ReporteFila titulo="Este mes" r={data.reportes.mes} />
+          </Card>
+
+          <Card glowOnHover={false}>
+            <h2 className="mb-3 font-display text-sm font-semibold text-ink">Cierres recientes</h2>
+            {data.cierres && data.cierres.length > 0 ? (
+              <ul className="space-y-1">
+                {data.cierres.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between rounded-lg px-2 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-ink">
+                        {c.cerrada_at ? formatFechaCorta(c.cerrada_at.slice(0, 10)) : "—"}
+                      </p>
+                      <p className="truncate text-xs text-ink-faint">
+                        {c.abierta_por_nombre} · base {formatRD(c.base)}
+                      </p>
+                    </div>
+                    <span className="shrink-0 tabular-nums text-sm font-medium text-ink">
+                      {c.efectivo_contado != null ? formatRD(c.efectivo_contado) : "—"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="py-4 text-sm text-ink-faint">Aún no hay cierres registrados.</p>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Detalle de movimiento */}
+      <Modal open={!!detalle} onClose={() => setDetalle(null)} title="Detalle del movimiento">
+        {detalle && (
+          <div className="text-center">
+            <p
+              className={`font-display text-3xl font-bold ${
+                detalle.tipo === "ingreso" ? "text-gradient" : "text-red-500"
+              }`}
+            >
+              {detalle.tipo === "egreso" ? "− " : ""}
+              {formatRD(detalle.monto)}
+            </p>
+            <p className="mt-1 text-sm text-ink-muted">
+              {detalle.etiqueta}
+              {detalle.metodo ? ` · ${cap(detalle.metodo)}` : ""}
+            </p>
+            <p className="mt-1 text-xs text-ink-faint">{formatFechaHora(detalle.fecha)}</p>
+            {detalle.tipo === "ingreso" && (
+              <p className="mt-4 text-xs text-ink-faint">
+                Documento de ejemplo generado para demostración.
+                <br />
+                NCF simulado para demostración. No certificado ante la DGII.
+              </p>
+            )}
+          </div>
         )}
-      </Card>
+      </Modal>
 
       {/* Modal egreso */}
       <Modal open={egresoOpen} onClose={() => setEgresoOpen(false)} title="Registrar egreso">
@@ -290,6 +365,34 @@ export function CajaView({ data }: { data: CajaData }) {
           </form>
         )}
       </Modal>
+    </div>
+  );
+}
+
+function ReporteFila({
+  titulo,
+  r,
+}: {
+  titulo: string;
+  r: { ingresos: number; egresos: number };
+}) {
+  return (
+    <div>
+      <p className="text-sm font-medium text-ink">{titulo}</p>
+      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+        <span className="text-ink-muted">
+          Ingresos: <span className="tabular-nums font-medium text-ink">{formatRD(r.ingresos)}</span>
+        </span>
+        <span className="text-ink-muted">
+          Egresos: <span className="tabular-nums font-medium text-ink">{formatRD(r.egresos)}</span>
+        </span>
+        <span className="text-ink-muted">
+          Balance:{" "}
+          <span className="tabular-nums font-semibold text-accent">
+            {formatRD(r.ingresos - r.egresos)}
+          </span>
+        </span>
+      </div>
     </div>
   );
 }
