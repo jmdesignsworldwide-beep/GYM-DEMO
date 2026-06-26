@@ -6,6 +6,8 @@ const APP_PATHS = [
   "/dashboard",
   "/miembros",
   "/pagos",
+  "/caja",
+  "/pos",
   "/acceso",
   "/calendario",
   "/clases",
