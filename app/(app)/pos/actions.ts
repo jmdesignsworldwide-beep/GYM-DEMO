@@ -10,7 +10,7 @@ export async function vender(input: {
   items: { productoId: string; cantidad: number }[];
   metodo: string;
 }): Promise<VentaResult> {
-  await requireSesion();
+  const perfil = await requireSesion();
   const { items, metodo } = input;
 
   if (!items || items.length === 0) return { ok: false, error: "El carrito está vacío." };
@@ -18,33 +18,51 @@ export async function vender(input: {
 
   const sb = getAdminSupabase();
   const ids = items.map((i) => i.productoId);
-  const { data: prods } = await sb.from("productos").select("id,precio").in("id", ids);
+  const { data: prods } = await sb.from("productos").select("id,nombre,precio,stock").in("id", ids);
   if (!prods || prods.length === 0) return { ok: false, error: "Productos no válidos." };
 
-  const precioPorId = new Map(prods.map((p) => [p.id as string, Number(p.precio)]));
+  const porId = new Map(prods.map((p) => [p.id as string, p]));
 
-  // Total calculado en el SERVIDOR (no se confía en el precio del cliente).
+  // Valida stock y total en el SERVIDOR.
   let total = 0;
   for (const it of items) {
-    const precio = precioPorId.get(it.productoId);
+    const prod = porId.get(it.productoId);
     const cant = Number(it.cantidad);
-    if (precio == null || !cant || cant <= 0) return { ok: false, error: "Venta inválida." };
-    total += precio * cant;
+    if (!prod || !cant || cant <= 0) return { ok: false, error: "Venta inválida." };
+    const stock = Number(prod.stock);
+    if (stock <= 0) return { ok: false, error: `Sin stock de ${prod.nombre}.` };
+    if (cant > stock) return { ok: false, error: `Solo quedan ${stock} de ${prod.nombre}.` };
+    total += Number(prod.precio) * cant;
   }
   if (total <= 0) return { ok: false, error: "Total inválido." };
 
-  // La venta entra a la caja como un pago de categoría producto (fuente única).
-  const { error } = await sb.from("pagos").insert({
+  // Registra la venta como pago (fuente única de la caja).
+  const { error: pErr } = await sb.from("pagos").insert({
     miembro_id: null,
     monto: total,
     metodo,
     categoria: "producto",
     fecha: new Date().toISOString(),
   });
-  if (error) return { ok: false, error: "No se pudo registrar la venta." };
+  if (pErr) return { ok: false, error: "No se pudo registrar la venta." };
+
+  // Descuenta stock real y registra el movimiento.
+  for (const it of items) {
+    const prod = porId.get(it.productoId)!;
+    const nuevo = Number(prod.stock) - Number(it.cantidad);
+    await sb.from("productos").update({ stock: nuevo }).eq("id", it.productoId);
+    await sb.from("movimientos_stock").insert({
+      producto_id: it.productoId,
+      tipo: "venta",
+      cantidad: -Number(it.cantidad),
+      user_id: perfil.userId,
+    });
+  }
 
   revalidatePath("/caja");
   revalidatePath("/dashboard");
   revalidatePath("/pagos");
+  revalidatePath("/pos");
+  revalidatePath("/inventario");
   return { ok: true, total };
 }

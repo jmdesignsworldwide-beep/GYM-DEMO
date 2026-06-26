@@ -8,6 +8,7 @@ const APP_PATHS = [
   "/pagos",
   "/caja",
   "/pos",
+  "/inventario",
   "/acceso",
   "/calendario",
   "/clases",
@@ -15,8 +16,8 @@ const APP_PATHS = [
   "/configuracion",
 ];
 
-// Rutas solo para admin (datos financieros / configuración).
-const ADMIN_PATHS = ["/pagos", "/reportes", "/configuracion"];
+// Rutas solo para admin (datos financieros / configuración / inventario).
+const ADMIN_PATHS = ["/pagos", "/reportes", "/configuracion", "/inventario"];
 
 const match = (path: string, list: string[]) =>
   list.some((p) => path === p || path.startsWith(p + "/"));
