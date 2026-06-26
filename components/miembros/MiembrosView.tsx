@@ -11,7 +11,7 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import { MiembroRow } from "./MiembroRow";
 import { MiembroFicha } from "./MiembroFicha";
 import { MiembroForm } from "./MiembroForm";
-import { ESTADOS, type EstadoKey, normaliza } from "@/lib/miembros/estado";
+import { ESTADOS, type EstadoKey, normaliza, estadoEfectivo } from "@/lib/miembros/estado";
 import type { Miembro } from "@/lib/miembros/data";
 
 type Filtro = "todos" | EstadoKey;
@@ -28,7 +28,7 @@ export function MiembrosView({ miembros }: { miembros: Miembro[] }) {
   const filtrados = useMemo(() => {
     const term = normaliza(q.trim());
     return miembros.filter((m) => {
-      if (filtro !== "todos" && m.estado !== filtro) return false;
+      if (filtro !== "todos" && estadoEfectivo(m.estado, m.fecha_vencimiento) !== filtro) return false;
       if (!term) return true;
       return (
         normaliza(m.nombre).includes(term) ||

@@ -2,12 +2,12 @@
 
 import { motion } from "framer-motion";
 import { Avatar } from "./Avatar";
-import { estadoInfo } from "@/lib/miembros/estado";
+import { estadoInfo, estadoEfectivo } from "@/lib/miembros/estado";
 import { formatFechaCorta } from "@/lib/format";
 import type { Miembro } from "@/lib/miembros/data";
 
 export function MiembroRow({ miembro, onClick }: { miembro: Miembro; onClick: () => void }) {
-  const est = estadoInfo(miembro.estado);
+  const est = estadoInfo(estadoEfectivo(miembro.estado, miembro.fecha_vencimiento));
 
   return (
     <motion.button
