@@ -1,0 +1,54 @@
+export type EstadoKey = "activo" | "vencido" | "congelado" | "cancelado";
+
+export const ESTADOS: { key: EstadoKey; label: string }[] = [
+  { key: "activo", label: "Activos" },
+  { key: "vencido", label: "Vencidos" },
+  { key: "congelado", label: "Congelados" },
+  { key: "cancelado", label: "Cancelados" },
+];
+
+type Info = { label: string; badge: string; dot: string };
+
+// Colores semánticos que funcionan en ambos temas (texto con dark: variante).
+export function estadoInfo(estado: string): Info {
+  switch (estado) {
+    case "activo":
+      return {
+        label: "Activo",
+        badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        dot: "bg-emerald-500",
+      };
+    case "vencido":
+      return {
+        label: "Vencido",
+        badge: "bg-red-500/10 text-red-600 dark:text-red-400",
+        dot: "bg-red-500",
+      };
+    case "congelado":
+      return {
+        label: "Congelado",
+        badge: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+        dot: "bg-sky-500",
+      };
+    case "cancelado":
+      return {
+        label: "Cancelado",
+        badge: "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400",
+        dot: "bg-zinc-500",
+      };
+    default:
+      return {
+        label: estado,
+        badge: "bg-bg-3 text-ink-muted",
+        dot: "bg-ink-faint",
+      };
+  }
+}
+
+// Normaliza para búsqueda (minúsculas, sin acentos).
+export function normaliza(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
