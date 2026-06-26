@@ -75,7 +75,7 @@ export function AppShell({
       <div className="lg:pl-64">
         <Header onMenu={() => setOpen(true)} username={username} rol={rol} />
         <DemoBanner accesoExpira={accesoExpira} />
-        <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+        <main className="mx-auto w-full max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={pathname}
