@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Pencil, RefreshCw, CreditCard } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { PagoModal } from "./PagoModal";
+import { RenovarModal } from "./RenovarModal";
 import { Button } from "@/components/ui/Button";
 import { Accordion } from "@/components/ui/Accordion";
 import { Skeleton } from "@/components/motion/Skeleton";
@@ -29,26 +30,36 @@ function cap(s: string) {
 export function MiembroFicha({
   miembro: m,
   onEditar,
-  onRenovar,
 }: {
   miembro: Miembro;
   onEditar?: () => void;
-  onRenovar?: () => void;
 }) {
   const router = useRouter();
-  const eff = estadoEfectivo(m.estado, m.fecha_vencimiento);
-  const est = estadoInfo(eff);
 
   const [cargando, setCargando] = useState(true);
   const [pagos, setPagos] = useState<PagoHist[]>([]);
   const [accesos, setAccesos] = useState<AccesoHist[]>([]);
-  const [deuda, setDeuda] = useState(m.deuda);
   const [reloadKey, setReloadKey] = useState(0);
   const [pagoOpen, setPagoOpen] = useState(false);
+  const [renovarOpen, setRenovarOpen] = useState(false);
+
+  // Estado local que se actualiza en vivo tras pagar/renovar.
+  const [vencimiento, setVencimiento] = useState(m.fecha_vencimiento);
+  const [estado, setEstado] = useState(m.estado);
+  const [plan, setPlan] = useState(m.plan);
+  const [precio, setPrecio] = useState(m.precio_mensual);
+  const [deuda, setDeuda] = useState(m.deuda);
 
   useEffect(() => {
+    setVencimiento(m.fecha_vencimiento);
+    setEstado(m.estado);
+    setPlan(m.plan);
+    setPrecio(m.precio_mensual);
     setDeuda(m.deuda);
-  }, [m.id, m.deuda]);
+  }, [m.id, m.fecha_vencimiento, m.estado, m.plan, m.precio_mensual, m.deuda]);
+
+  const eff = estadoEfectivo(estado, vencimiento);
+  const est = estadoInfo(eff);
 
   useEffect(() => {
     let activo = true;
@@ -86,11 +97,11 @@ export function MiembroFicha({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-ink-faint">Plan actual</p>
-            <p className="font-medium text-ink">{m.plan}</p>
+            <p className="font-medium text-ink">{plan}</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-ink-faint">Vence</p>
-            <p className="font-medium text-ink">{formatFechaCorta(m.fecha_vencimiento)}</p>
+            <p className="font-medium text-ink">{formatFechaCorta(vencimiento)}</p>
           </div>
         </div>
         {eff === "congelado" && m.fecha_reanudacion && (
@@ -110,7 +121,7 @@ export function MiembroFicha({
         <Button size="md" magnetic={false} onClick={onEditar}>
           <Pencil size={16} /> Editar
         </Button>
-        <Button variant="secondary" size="md" magnetic={false} onClick={onRenovar}>
+        <Button variant="secondary" size="md" magnetic={false} onClick={() => setRenovarOpen(true)}>
           <RefreshCw size={16} /> Renovar
         </Button>
         <Button variant="secondary" size="md" magnetic={false} onClick={() => setPagoOpen(true)}>
@@ -127,7 +138,7 @@ export function MiembroFicha({
           <Dato label="Email" value={m.email} />
           <Dato label="Dirección" value={m.direccion} />
           <Dato label="Inscripción" value={formatFechaCorta(m.fecha_inicio)} />
-          <Dato label="Mensualidad" value={formatRD(m.precio_mensual)} />
+          <Dato label="Mensualidad" value={formatRD(precio)} />
         </dl>
       </div>
 
@@ -218,6 +229,21 @@ export function MiembroFicha({
         onClose={() => setPagoOpen(false)}
         onDone={(r) => {
           setDeuda(r.deudaRestante ?? deuda);
+          setReloadKey((k) => k + 1);
+          router.refresh();
+        }}
+      />
+
+      <RenovarModal
+        miembro={m}
+        open={renovarOpen}
+        onClose={() => setRenovarOpen(false)}
+        onDone={(r) => {
+          if (r.nuevaFecha) setVencimiento(r.nuevaFecha);
+          if (r.plan) setPlan(r.plan);
+          if (r.precio) setPrecio(r.precio);
+          setEstado("activo");
+          setDeuda(0);
           setReloadKey((k) => k + 1);
           router.refresh();
         }}

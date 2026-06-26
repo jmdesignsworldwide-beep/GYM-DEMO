@@ -157,3 +157,82 @@ export async function registrarPago(input: PagoInput): Promise<PagoResult> {
   revalidatePath("/pagos");
   return { ok: true, abonado, deudaRestante };
 }
+
+export type RenovarInput = {
+  miembroId: string;
+  plan: string;
+  meses: number;
+  precioMensual: number;
+  conPago: boolean;
+  metodo: string;
+};
+
+export type RenovarResult = {
+  ok: boolean;
+  error?: string;
+  nuevaFecha?: string;
+  plan?: string;
+  precio?: number;
+  cobrado?: number;
+};
+
+function nuevaVencimiento(base: string, meses: number): string {
+  const d = new Date(`${base}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + meses);
+  return d.toISOString().slice(0, 10);
+}
+
+export async function renovarMembresia(input: RenovarInput): Promise<RenovarResult> {
+  const { miembroId, plan, conPago, metodo } = input;
+  const meses = Number(input.meses);
+  const precioMensual = Number(input.precioMensual);
+
+  if (!miembroId) return { ok: false, error: "Miembro no válido." };
+  if (!plan || !meses || meses <= 0) return { ok: false, error: "Plan no válido." };
+  if (!precioMensual || precioMensual <= 0) return { ok: false, error: "Precio no válido." };
+  if (conPago && !metodo) return { ok: false, error: "Selecciona un método de pago." };
+
+  const sb = getAdminSupabase();
+
+  const { data: miembro, error: mErr } = await sb
+    .from("miembros")
+    .select("fecha_vencimiento")
+    .eq("id", miembroId)
+    .single();
+  if (mErr || !miembro) return { ok: false, error: "No se encontró el miembro." };
+
+  const hoy = new Date().toISOString().slice(0, 10);
+  const base = miembro.fecha_vencimiento > hoy ? (miembro.fecha_vencimiento as string) : hoy;
+  const nueva = nuevaVencimiento(base, meses);
+  const cobrado = precioMensual * meses;
+
+  // Extiende vencimiento, fija plan/precio y reactiva (estado se deriva igual por fecha).
+  const { error: uErr } = await sb
+    .from("miembros")
+    .update({
+      fecha_vencimiento: nueva,
+      plan,
+      precio_mensual: precioMensual,
+      estado: "activo",
+      deuda: 0,
+    })
+    .eq("id", miembroId);
+  if (uErr) return { ok: false, error: "No se pudo renovar la membresía." };
+
+  // La renovación genera el pago (dispara el efecto organismo de caja/ingresos).
+  if (conPago) {
+    const { error: pErr } = await sb.from("pagos").insert({
+      miembro_id: miembroId,
+      monto: cobrado,
+      metodo,
+      categoria: "mensualidad",
+      fecha: new Date().toISOString(),
+    });
+    if (pErr) return { ok: false, error: "Se renovó, pero no se pudo registrar el pago." };
+  }
+
+  revalidatePath("/miembros");
+  revalidatePath("/dashboard");
+  revalidatePath("/pagos");
+  return { ok: true, nuevaFecha: nueva, plan, precio: precioMensual, cobrado: conPago ? cobrado : 0 };
+}
