@@ -180,7 +180,7 @@ export function PagosView({ data }: { data: PagosData }) {
 
       {/* Lista */}
       {filtrados.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-ink-faint">No hay pagos con estos filtros.</p>
+        <p className="mt-12 text-center text-sm text-ink-faint">No hay pagos con estos filtros.</p>
       ) : (
         <div className="mt-2 space-y-1">
           {mostrados.map((p) => (

@@ -171,7 +171,7 @@ export function EmpleadoFicha({
           {/* Registrar nómina */}
           <div className="space-y-2 rounded-lg border border-line p-4">
             <p className="text-sm font-semibold text-ink-muted">Registrar pago de nómina</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input
                 className={field}
                 type="number"

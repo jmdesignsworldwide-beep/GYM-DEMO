@@ -94,7 +94,11 @@ export function PagoModal({
               </p>
             </div>
           )}
-          <p className="text-xs text-ink-faint">Documento de ejemplo generado para demostración.</p>
+          <p className="text-xs text-ink-faint">
+            Documento de ejemplo generado para demostración.
+            <br />
+            NCF simulado para demostración. No certificado ante la DGII.
+          </p>
           <Button magnetic={false} className="w-full" onClick={onClose}>
             Listo
           </Button>
@@ -152,6 +156,12 @@ export function PagoModal({
               </select>
             </label>
           </div>
+
+          {metodo === "transferencia" && (
+            <p className="rounded-lg bg-bg-2 px-3 py-2 text-xs text-ink-muted">
+              Verificación de transferencia simulada para demostración. No se valida contra el banco.
+            </p>
+          )}
 
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink-muted">Fecha</span>

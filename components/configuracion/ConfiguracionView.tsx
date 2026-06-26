@@ -195,7 +195,7 @@ export function ConfiguracionView({
                   className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                     u.activo
                       ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "bg-zinc-500/15 text-zinc-500"
+                      : "bg-bg-3 text-ink-muted"
                   }`}
                 >
                   {u.activo ? "Activo" : "Inactivo"}

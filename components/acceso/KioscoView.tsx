@@ -217,7 +217,7 @@ function Respuesta({
   if (eff === "activo") {
     const dias = diasEntre(hoy, m.fecha_vencimiento);
     return (
-      <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-8" style={{ boxShadow: "0 0 40px -10px rgba(16,185,129,0.4)" }}>
+      <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8" style={{ boxShadow: "0 0 40px -10px rgba(16,185,129,0.4)" }}>
         {foto}
         <CheckCircle2 size={32} className="mx-auto mb-2 text-emerald-500" />
         <p className="font-display text-3xl font-bold text-ink">¡Bienvenida, {m.nombre.split(" ")[0]}!</p>
@@ -238,7 +238,7 @@ function Respuesta({
   if (eff === "vencido") {
     const hace = diasEntre(m.fecha_vencimiento, hoy);
     return (
-      <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-8">
+      <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-8">
         {foto}
         <XCircle size={32} className="mx-auto mb-2 text-red-500" />
         <p className="font-display text-3xl font-bold text-ink">Membresía vencida</p>
@@ -259,7 +259,7 @@ function Respuesta({
 
   if (eff === "congelado") {
     return (
-      <div className="rounded-2xl border border-sky-500/30 bg-sky-500/5 p-8">
+      <div className="rounded-2xl border border-sky-500/30 bg-sky-500/10 p-8">
         {foto}
         <Snowflake size={32} className="mx-auto mb-2 text-sky-500" />
         <p className="font-display text-3xl font-bold text-ink">Membresía congelada</p>
