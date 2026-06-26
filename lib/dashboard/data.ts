@@ -11,8 +11,7 @@ export type MiembroLite = {
   fecha_vencimiento: string; // YYYY-MM-DD
 };
 
-export type AccesoLite = { nombre: string; hora: string };
-export type Pendiente = { id: string; nombre: string; plan: string; monto: number };
+export type AccesoReciente = MiembroLite & { hora: string };
 export type PuntoTendencia = { mes: string; total: number };
 
 export type DashboardData = {
@@ -27,8 +26,8 @@ export type DashboardData = {
   enGymAhora: number;
   vencenSemana: MiembroLite[];
   vencenHoy: MiembroLite[];
-  pendientes: Pendiente[];
-  ultimosAccesos: AccesoLite[];
+  pendientes: MiembroLite[];
+  ultimosAccesos: AccesoReciente[];
   tendencia: PuntoTendencia[];
 };
 
@@ -90,7 +89,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     miembro_id: string;
   }[];
 
-  const nombrePorId = new Map(miembros.map((m) => [m.id, m.nombre]));
+  const miembroPorId = new Map(miembros.map((m) => [m.id, m]));
 
   // Día de referencia = el día más reciente con pagos (mantiene el demo vivo).
   const refDate =
@@ -140,15 +139,18 @@ export async function getDashboardData(): Promise<DashboardData> {
     .filter((m) => m.fecha_vencimiento >= refDate && m.fecha_vencimiento <= semanaFin)
     .sort((a, b) => a.fecha_vencimiento.localeCompare(b.fecha_vencimiento));
 
-  const pendientes: Pendiente[] = miembros
+  const pendientes: MiembroLite[] = miembros
     .filter((m) => m.estado === "vencido")
-    .map((m) => ({ id: m.id, nombre: m.nombre, plan: m.plan, monto: m.precio_mensual }))
-    .sort((a, b) => b.monto - a.monto);
+    .sort((a, b) => b.precio_mensual - a.precio_mensual);
 
-  const ultimosAccesos: AccesoLite[] = [...accesos]
+  const ultimosAccesos: AccesoReciente[] = [...accesos]
     .sort((a, b) => b.entrada.localeCompare(a.entrada))
     .slice(0, 8)
-    .map((a) => ({ nombre: nombrePorId.get(a.miembro_id) ?? "Miembro", hora: horaLabel(a.entrada) }));
+    .map((a) => {
+      const m = miembroPorId.get(a.miembro_id);
+      return { ...(m as MiembroLite), hora: horaLabel(a.entrada) };
+    })
+    .filter((a) => a.id);
 
   // Etiqueta de fecha en español
   const dref = new Date(`${refDate}T00:00:00Z`);

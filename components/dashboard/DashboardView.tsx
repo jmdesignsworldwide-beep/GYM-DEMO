@@ -10,10 +10,12 @@ import { VencenSemana } from "./VencenSemana";
 import { VencenHoy } from "./VencenHoy";
 import { Pendientes } from "./Pendientes";
 import { UltimosAccesos } from "./UltimosAccesos";
+import { FichaProvider } from "./ficha";
 import type { DashboardData } from "@/lib/dashboard/data";
 
 export function DashboardView({ data }: { data: DashboardData }) {
   return (
+    <FichaProvider>
     <div className="relative">
       <Aurora intensity="subtle" />
 
@@ -63,7 +65,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
             <VencenHoy miembros={data.vencenHoy} />
           </StaggerItem>
           <StaggerItem>
-            <Pendientes pendientes={data.pendientes} />
+            <Pendientes miembros={data.pendientes} />
           </StaggerItem>
           <StaggerItem>
             <UltimosAccesos accesos={data.ultimosAccesos} />
@@ -71,5 +73,6 @@ export function DashboardView({ data }: { data: DashboardData }) {
         </div>
       </StaggerGroup>
     </div>
+    </FichaProvider>
   );
 }
