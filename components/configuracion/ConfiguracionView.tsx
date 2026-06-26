@@ -2,23 +2,37 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus, KeyRound } from "lucide-react";
+import { UserPlus, KeyRound, Clock } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { crearUsuario, cambiarActivo, cambiarPassword } from "@/app/(app)/configuracion/actions";
+import { crearCuentaCliente, renovarAcceso, revocarAcceso } from "@/app/(app)/configuracion/super-actions";
 
 const field =
   "h-11 w-full rounded-lg border bg-bg-2 px-3 text-sm text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none";
 
 type Usuario = { userId: string; username: string; rol: string; activo: boolean };
+type Cliente = { userId: string; username: string; accesoExpira: string | null };
+
+function diasRestantes(iso: string | null): { texto: string; clase: string } {
+  if (!iso) return { texto: "Sin vencimiento", clase: "text-emerald-600 dark:text-emerald-400" };
+  const dias = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+  if (dias <= 0) return { texto: "Expirada", clase: "text-red-500" };
+  if (dias <= 3) return { texto: `${dias} ${dias === 1 ? "día" : "días"}`, clase: "text-amber-600 dark:text-amber-400" };
+  return { texto: `${dias} días`, clase: "text-ink" };
+}
 
 export function ConfiguracionView({
   usuarios,
   miUserId,
+  superAdmin,
+  clientes,
 }: {
   usuarios: Usuario[];
   miUserId: string;
+  superAdmin: boolean;
+  clientes: Cliente[];
 }) {
   const router = useRouter();
   const [usuario, setUsuario] = useState("");
@@ -28,6 +42,14 @@ export function ConfiguracionView({
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pwUser, setPwUser] = useState<Usuario | null>(null);
   const [pwValue, setPwValue] = useState("");
+
+  // Panel de cliente (super-admin)
+  const [cUsuario, setCUsuario] = useState("");
+  const [cPassword, setCPassword] = useState("");
+  const [cDias, setCDias] = useState("15");
+  const [cCustom, setCCustom] = useState("");
+  const [cLoading, setCLoading] = useState(false);
+  const [cMsg, setCMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function crear(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +85,46 @@ export function ConfiguracionView({
     } else {
       setMsg({ ok: false, text: res.error ?? "Error." });
     }
+  }
+
+  async function crearCliente(e: React.FormEvent) {
+    e.preventDefault();
+    if (cLoading) return;
+    setCLoading(true);
+    setCMsg(null);
+    const dias = cDias === "none" ? null : cDias === "custom" ? Number(cCustom) : Number(cDias);
+    if (cDias === "custom" && (!dias || dias <= 0)) {
+      setCLoading(false);
+      setCMsg({ ok: false, text: "Indica un número de días válido." });
+      return;
+    }
+    const res = await crearCuentaCliente({ usuario: cUsuario, password: cPassword, dias });
+    setCLoading(false);
+    if (res.ok) {
+      setCMsg({ ok: true, text: `Cuenta "${cUsuario}" creada.` });
+      setCUsuario("");
+      setCPassword("");
+      setCDias("15");
+      setCCustom("");
+      router.refresh();
+    } else {
+      setCMsg({ ok: false, text: res.error ?? "Error." });
+    }
+  }
+
+  async function renovar(c: Cliente) {
+    const txt = prompt(`¿Cuántos días sumar a "${c.username}"?`, "15");
+    if (!txt) return;
+    const res = await renovarAcceso(c.userId, Number(txt));
+    if (res.ok) router.refresh();
+    else setCMsg({ ok: false, text: res.error ?? "Error." });
+  }
+
+  async function revocar(c: Cliente) {
+    if (!confirm(`¿Revocar el acceso de "${c.username}" ahora?`)) return;
+    const res = await revocarAcceso(c.userId);
+    if (res.ok) router.refresh();
+    else setCMsg({ ok: false, text: res.error ?? "Error." });
   }
 
   return (
@@ -160,6 +222,99 @@ export function ConfiguracionView({
           </div>
         </Card>
       </div>
+
+      {/* Panel de accesos de cliente — solo Marien (JM Designs) */}
+      {superAdmin && (
+        <div className="mt-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Clock size={18} className="text-accent" />
+            <h2 className="font-display text-sm font-semibold text-ink">
+              Accesos de cliente · JM Designs
+            </h2>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* Crear acceso */}
+            <Card glowOnHover={false}>
+              <form onSubmit={crearCliente} className="space-y-3">
+                <input
+                  className={field}
+                  placeholder="Usuario del cliente"
+                  value={cUsuario}
+                  onChange={(e) => setCUsuario(e.target.value)}
+                  autoCapitalize="none"
+                />
+                <input
+                  className={field}
+                  placeholder="Contraseña (mín. 6)"
+                  value={cPassword}
+                  onChange={(e) => setCPassword(e.target.value)}
+                />
+                <select className={field} value={cDias} onChange={(e) => setCDias(e.target.value)}>
+                  <option value="7">7 días</option>
+                  <option value="15">15 días</option>
+                  <option value="30">30 días</option>
+                  <option value="custom">Personalizado…</option>
+                  <option value="none">Sin vencimiento</option>
+                </select>
+                {cDias === "custom" && (
+                  <input
+                    className={field}
+                    type="number"
+                    min={1}
+                    placeholder="Número de días"
+                    value={cCustom}
+                    onChange={(e) => setCCustom(e.target.value)}
+                  />
+                )}
+                <Button type="submit" loading={cLoading} magnetic={false} className="w-full">
+                  Crear acceso de cliente
+                </Button>
+                {cMsg && (
+                  <p className={`text-sm ${cMsg.ok ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
+                    {cMsg.text}
+                  </p>
+                )}
+              </form>
+            </Card>
+
+            {/* Lista de clientes */}
+            <Card glowOnHover={false}>
+              <h3 className="mb-3 text-sm font-semibold text-ink">Cuentas ({clientes.length})</h3>
+              {clientes.length === 0 ? (
+                <p className="py-4 text-sm text-ink-faint">Aún no has creado accesos de cliente.</p>
+              ) : (
+                <div className="space-y-1">
+                  {clientes.map((c) => {
+                    const d = diasRestantes(c.accesoExpira);
+                    return (
+                      <div key={c.userId} className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-bg-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-ink">{c.username}</p>
+                          <p className={`text-xs font-medium ${d.clase}`}>{d.texto}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => renovar(c)}
+                          className="rounded-lg px-2 py-1 text-xs font-medium text-ink-muted hover:bg-bg-3 hover:text-ink"
+                        >
+                          Renovar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => revocar(c)}
+                          className="rounded-lg px-2 py-1 text-xs font-medium text-red-500 hover:bg-bg-3"
+                        >
+                          Revocar
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* Cambiar contraseña */}
       <Modal open={!!pwUser} onClose={() => setPwUser(null)} title="Cambiar contraseña">

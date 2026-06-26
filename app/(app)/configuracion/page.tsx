@@ -7,7 +7,6 @@ export const dynamic = "force-dynamic";
 export default async function ConfiguracionPage() {
   const perfil = await getSessionPerfil();
 
-  // Defensa en profundidad (además del middleware).
   if (!perfil || perfil.rol !== "admin") {
     return (
       <div className="mx-auto max-w-md py-20 text-center">
@@ -20,15 +19,34 @@ export default async function ConfiguracionPage() {
   const sb = getSupabaseServer();
   const { data } = await sb
     .from("perfiles")
-    .select("user_id,username,rol,activo,created_at")
+    .select("user_id,username,rol,activo,acceso_expira,creado_por,created_at")
     .order("created_at");
 
-  const usuarios = (data ?? []).map((u) => ({
-    userId: u.user_id as string,
-    username: (u.username as string) ?? "—",
-    rol: u.rol as string,
-    activo: u.activo as boolean,
-  }));
+  const rows = data ?? [];
 
-  return <ConfiguracionView usuarios={usuarios} miUserId={perfil.userId} />;
+  const usuarios = rows
+    .filter((u) => !u.creado_por)
+    .map((u) => ({
+      userId: u.user_id as string,
+      username: (u.username as string) ?? "—",
+      rol: u.rol as string,
+      activo: u.activo as boolean,
+    }));
+
+  const clientes = rows
+    .filter((u) => u.creado_por)
+    .map((u) => ({
+      userId: u.user_id as string,
+      username: (u.username as string) ?? "—",
+      accesoExpira: (u.acceso_expira as string) ?? null,
+    }));
+
+  return (
+    <ConfiguracionView
+      usuarios={usuarios}
+      miUserId={perfil.userId}
+      superAdmin={perfil.superAdmin}
+      clientes={clientes}
+    />
+  );
 }
