@@ -1,21 +1,15 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-// Cliente de Supabase para el navegador (anon key, pública por diseño).
-// Lazy: se instancia en el primer uso (en el cliente), no al importar el
-// módulo — así el prerender no lo evalúa sin las variables de entorno.
+// Cliente de navegador con sesión en cookies (para que el servidor también
+// conozca al usuario y su rol). Lazy singleton.
 let client: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
   if (!client) {
-    client = createClient(
+    client = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-        },
-      },
     );
   }
   return client;
