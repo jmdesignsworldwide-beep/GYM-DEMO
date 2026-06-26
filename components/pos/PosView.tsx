@@ -33,7 +33,13 @@ export function PosView({ productos }: { productos: Producto[] }) {
   const total = lineas.reduce((s, [id, c]) => s + (porId.get(id)?.precio ?? 0) * c, 0);
 
   function add(id: string) {
-    setCarrito((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
+    const prod = porId.get(id);
+    if (!prod) return;
+    setCarrito((c) => {
+      const actual = c[id] ?? 0;
+      if (actual >= prod.stock) return c; // no exceder el stock real
+      return { ...c, [id]: actual + 1 };
+    });
   }
   function quitar(id: string) {
     setCarrito((c) => {
@@ -87,22 +93,39 @@ export function PosView({ productos }: { productos: Producto[] }) {
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {visibles.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => add(p.id)}
-                className="glass shadow-card flex flex-col rounded-lg p-4 text-left transition-transform hover:-translate-y-0.5"
-              >
-                <span className="text-sm font-medium text-ink">{p.nombre}</span>
-                <span className="mt-2 tabular-nums font-display text-lg font-bold text-accent">
-                  {formatRD(p.precio)}
-                </span>
-                {carrito[p.id] > 0 && (
-                  <span className="mt-1 text-xs text-ink-faint">En carrito: {carrito[p.id]}</span>
-                )}
-              </button>
-            ))}
+            {visibles.map((p) => {
+              const agotado = p.stock <= 0;
+              const bajo = !agotado && p.stock <= p.umbralAlerta;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => add(p.id)}
+                  disabled={agotado}
+                  className="glass shadow-card flex flex-col rounded-lg p-4 text-left transition-transform enabled:hover:-translate-y-0.5 disabled:opacity-50"
+                >
+                  <span className="text-sm font-medium text-ink">{p.nombre}</span>
+                  <span className="mt-2 tabular-nums font-display text-lg font-bold text-accent">
+                    {formatRD(p.precio)}
+                  </span>
+                  <span
+                    className={`mt-1 text-xs ${
+                      agotado
+                        ? "font-medium text-red-500"
+                        : bajo
+                          ? "text-amber-600 dark:text-amber-400"
+                          : "text-ink-faint"
+                    }`}
+                  >
+                    {agotado
+                      ? "Agotado"
+                      : carrito[p.id] > 0
+                        ? `En carrito: ${carrito[p.id]} · stock ${p.stock}`
+                        : `Stock: ${p.stock}`}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
