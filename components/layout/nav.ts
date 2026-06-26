@@ -10,6 +10,7 @@ import {
   Dumbbell,
   UserCog,
   HeartPulse,
+  Salad,
   BarChart3,
   CalendarClock,
   Settings,
@@ -38,6 +39,7 @@ export const navItems: NavItem[] = [
   { href: "/calendario", label: "Calendario", icon: CalendarClock },
   { href: "/clases", label: "Clases", icon: Dumbbell },
   { href: "/entrenamiento", label: "Entrenamiento", icon: HeartPulse },
+  { href: "/nutricion", label: "Nutrición", icon: Salad },
   { href: "/reportes", label: "Reportes", icon: BarChart3, soloAdmin: true },
   { href: "/configuracion", label: "Configuración", icon: Settings, soloAdmin: true },
 ];
